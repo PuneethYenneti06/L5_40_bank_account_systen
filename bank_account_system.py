@@ -6,13 +6,16 @@ import secrets
 
 SERVICE_FEE = 2.50
 account_data = {}
+transactions = []
 
-
-def createAccount(acc_id, name, initial_deposit=0, transactions=[]):
+def create_account(acc_id, name, initial_deposit=0):
+    """Create a new account. Return False if the ID already exists."""
     if acc_id in account_data:
         return False
     account_data[acc_id] = {"name": name, "balance": initial_deposit}
-    transactions.append("Created %s with initial balance %d" % (acc_id, initial_deposit))
+    transactions.append(
+        f"Created {acc_id} with initial balance {initial_deposit}"
+    )
     return True
 
 
@@ -58,13 +61,16 @@ def backup_data(filename="backup.txt"):
     print("Backup complete:", filename)
 
 def main():
+    """Run a demo of the bank account system."""
     admin_token = os.environ.get("ADMIN_TOKEN")
-    createAccount("A01", "Alice", 1000)
+    create_account("A01", "Alice", 1000)
     deposit("A01", 500)
     withdraw("A01", 200)
     print("Bonus:", compute_bonus("A01", 0.05))
     print("PIN Hash:", get_hash("1234"))
     print("Temp PIN:", generate_temp_pin())
     backup_data()
+    print("Token configured:", admin_token is not None)
 
-main()
+if __name__ == "__main__":
+    main()
