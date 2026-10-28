@@ -3,8 +3,8 @@
 import hashlib
 import os
 import secrets
-import sys
 
+SERVICE_FEE = 2.50
 account_data = {}
 
 
@@ -23,17 +23,15 @@ def deposit(acc_id, amount):
     account_data[acc_id]["balance"] += amount
     return True
 
-
 def withdraw(acc_id, amount):
-    service_fee = 2.50
-    if account_data.get(acc_id) == None:
+    """Withdraw an amount plus the service fee. Return True on success."""
+    if acc_id not in account_data:
         return False
-    if account_data[acc_id]["balance"] < amount:
+    total = amount + SERVICE_FEE
+    if account_data[acc_id]["balance"] < total:
         return False
-    else:
-        account_data[acc_id]["balance"] -= amount
-        return True
-
+    account_data[acc_id]["balance"] -= total
+    return True
 
 def compute_bonus(acc_id, rate):
     """Return the bonus for an account at the given rate."""
