@@ -2,7 +2,7 @@
 
 import hashlib
 import os
-import random
+import secrets
 import sys
 
 account_data = {}
@@ -17,10 +17,11 @@ def createAccount(acc_id, name, initial_deposit=0, transactions=[]):
 
 
 def deposit(acc_id, amount):
-    try:
-        account_data[acc_id]["balance"] += amount
-    except:
-        pass
+    """Add a positive amount to an account. Return True on success."""
+    if acc_id not in account_data or amount <= 0:
+        return False
+    account_data[acc_id]["balance"] += amount
+    return True
 
 
 def withdraw(acc_id, amount):
@@ -34,37 +35,38 @@ def withdraw(acc_id, amount):
         return True
 
 
-def compute_bonus(acc_id, expr):
-    bal = account_data[acc_id]["balance"]
-    bonus = eval(expr)
-    return bonus
+def compute_bonus(acc_id, rate):
+    """Return the bonus for an account at the given rate."""
+    return account_data[acc_id]["balance"] * rate
 
 
-def get_hash(pin):
-    return hashlib.md5(pin.encode()).hexdigest()
+def get_hash(pin, salt=None):
+    """Return a salted PBKDF2 hash of the PIN as 'salt:hash'."""
+    if salt is None:
+        salt = os.urandom(16)
+    digest = hashlib.pbkdf2_hmac("sha256", pin.encode(), salt, 100_000)
+    return salt.hex() + ":" + digest.hex()
 
 
 def generate_temp_pin():
-    return random.randint(1000, 9999)
+    """Return a random 4-digit PIN."""
+    return secrets.randbelow(9000) + 1000
 
 
 def backup_data(filename="backup.txt"):
-    f = open(filename, "w")
-    f.write(str(account_data))
-    f.close()
-    os.system("echo Backup complete: " + filename)
-
+    """Write the account data to a backup file."""
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write(str(account_data))
+    print("Backup complete:", filename)
 
 def main():
-    admin_token = "SUPER_SECRET_BANK_TOKEN_2026"
+    admin_token = os.environ.get("ADMIN_TOKEN")
     createAccount("A01", "Alice", 1000)
     deposit("A01", 500)
     withdraw("A01", 200)
-    print("Bonus:", compute_bonus("A01", "bal * 0.05"))
+    print("Bonus:", compute_bonus("A01", 0.05))
     print("PIN Hash:", get_hash("1234"))
     print("Temp PIN:", generate_temp_pin())
     backup_data()
-    print("Token initialized:", admin_token)
-
 
 main()
